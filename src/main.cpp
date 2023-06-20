@@ -1,98 +1,56 @@
 #include <gtk/gtk.h>
-
-enum
-{
-  COL_NAME = 0,
-  COL_AGE,
-  NUM_COLS
-} ;
+#include <MQTTClient.h>
 
 
-static GtkTreeModel *
-create_and_fill_model (void)
-{
-  GtkListStore *store = gtk_list_store_new (NUM_COLS,
-                                            G_TYPE_STRING,
-                                            G_TYPE_UINT);
+GtkWidget *emailLabel, *emailEntry, *passwordLabel, *passwordEntry, *signupBtn, *grid;
+void signup_button_clicked(GtkWidget *wid,gpointer data)
+ {
+      const gchar *emailData = gtk_entry_get_text(GTK_ENTRY(emailEntry)); 
+      gtk_label_set_text(GTK_LABEL(data),emailData); 
+      gtk_entry_set_text(GTK_ENTRY(emailEntry),""); 
+      gtk_entry_set_text(GTK_ENTRY(passwordEntry),"");
+ }
 
-  /* Append a row and fill in some data */
-  GtkTreeIter iter;
-  gtk_list_store_append (store, &iter);
-  gtk_list_store_set (store, &iter,
-                      COL_NAME, "Heinz El-Mann",
-                      COL_AGE, 51,
-                      -1);
-
-  /* append another row and fill in some data */
-  gtk_list_store_append (store, &iter);
-  gtk_list_store_set (store, &iter,
-                      COL_NAME, "Jane Doe",
-                      COL_AGE, 23,
-                      -1);
-
-  /* ... and a third row */
-  gtk_list_store_append (store, &iter);
-  gtk_list_store_set (store, &iter,
-                      COL_NAME, "Joe Bungop",
-                      COL_AGE, 91,
-                      -1);
-
-  return GTK_TREE_MODEL (store);
-}
-
-static GtkWidget *
-create_view_and_model (void)
-{
-  GtkWidget *view = gtk_tree_view_new ();
-
-  GtkCellRenderer *renderer;
-
-  /* --- Column #1 --- */
-  renderer = gtk_cell_renderer_text_new ();
-  gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (view),
-                                               -1,      
-                                               "Name",  
-                                               renderer,
-                                               "text", COL_NAME,
-                                               NULL);
-
-  /* --- Column #2 --- */
-  renderer = gtk_cell_renderer_text_new ();
-  gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (view),
-                                               -1,      
-                                               "Age",  
-                                               renderer,
-                                               "text", COL_AGE,
-                                               NULL);
-
-  GtkTreeModel *model = create_and_fill_model ();
-
-  gtk_tree_view_set_model (GTK_TREE_VIEW (view), model);
-
-  /* The tree view has acquired its own reference to the
-   *  model, so we can drop ours. That way the model will
-   *  be freed automatically when the tree view is destroyed
-   */
-  g_object_unref (model);
-
-  return view;
-}
-
-int
-main (int argc, char **argv)
-{
-  gtk_init (&argc, &argv);
-
-  GtkWidget *window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  g_signal_connect (window, "destroy", gtk_main_quit, NULL);
-
-  GtkWidget *view = create_view_and_model ();
-
-  gtk_container_add (GTK_CONTAINER (window), view);
-
-  gtk_widget_show_all (window);
-
-  gtk_main ();
-
-  return 0;
-}
+static void activate (GtkApplication* app, gpointer user_data)
+ {
+     GtkWidget *window;
+     window = gtk_application_window_new (app);
+     gtk_window_set_title (GTK_WINDOW (window), "User Input");
+     gtk_window_set_default_size (GTK_WINDOW (window), 500, 400);
+     GtkWidget *showEmail; 
+     emailLabel = gtk_label_new("Email:"); 
+     emailEntry = gtk_entry_new(); 
+     gtk_entry_set_placeholder_text(GTK_ENTRY(emailEntry),"Email");
+     GIcon *icon; 
+     GFile *path; 
+     path = g_file_new_for_path("D:/path/emailicon.png"); 
+     icon = g_file_icon_new(path); 
+     gtk_entry_set_icon_from_gicon(GTK_ENTRY(emailEntry),GTK_ENTRY_ICON_PRIMARY,icon); 
+     passwordLabel = gtk_label_new("Password:");
+     passwordEntry = gtk_entry_new();
+     gtk_entry_set_placeholder_text(GTK_ENTRY(passwordEntry),"Password");
+     gtk_entry_set_visibility(GTK_ENTRY(passwordEntry),FALSE);
+     signupBtn = gtk_button_new_with_label("Sign Up");
+     showEmail = gtk_label_new("");
+     g_signal_connect(signupBtn,"clicked",G_CALLBACK(signup_button_clicked),showEmail);
+     GtkWidget *box; box = gtk_box_new(GTK_ORIENTATION_VERTICAL,20);
+     gtk_box_pack_start(GTK_BOX(box),emailLabel,FALSE,FALSE,0);
+     gtk_box_pack_start(GTK_BOX(box),emailEntry,FALSE,FALSE,0);
+     gtk_box_pack_start(GTK_BOX(box),passwordLabel,FALSE,FALSE,0);
+     gtk_box_pack_start(GTK_BOX(box),passwordEntry,FALSE,FALSE,0); 
+     gtk_box_pack_start(GTK_BOX(box),signupBtn,FALSE,FALSE,0); 
+     gtk_box_pack_start(GTK_BOX(box),showEmail,FALSE,FALSE,0); 
+     gtk_container_add(GTK_CONTAINER(window),box); 
+     gtk_widget_show_all (window);
+ }
+  
+ int main(int argc,char **argv)
+ {
+     GtkApplication *app;
+     int status;
+     app = gtk_application_new ("com.hackthedeveloper", G_APPLICATION_FLAGS_NONE);
+     g_signal_connect (app, "activate", G_CALLBACK(activate), NULL);
+     status = g_application_run(G_APPLICATION(app), argc, argv);
+     g_object_unref (app);
+     return status;
+ }
